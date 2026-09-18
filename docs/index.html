@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pima Diabetes | Data Story</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#1b2027; --paper:#f5f1e9; --red:#df5b48; --blue:#235b9a; --yellow:#e5bd52; --line:#d8d1c5; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#20242a; color:var(--ink); font-family:"Noto Sans KR",sans-serif; overflow:hidden; }
+    .deck { height:100vh; }
+    .slide { display:none; min-height:100vh; padding:42px clamp(26px,7vw,112px); background:var(--paper); position:relative; overflow:hidden; }
+    .slide.active { display:flex; flex-direction:column; justify-content:center; }
+    .slide::after { content:""; position:absolute; inset:18px; border:1px solid var(--line); pointer-events:none; }
+    .slide.dark { background:var(--ink); color:var(--paper); }
+    .slide.dark::after { border-color:#46505a; }
+    .kicker { color:var(--red); font:500 12px/1 "DM Mono",monospace; letter-spacing:.14em; text-transform:uppercase; margin-bottom:22px; }
+    .dark .kicker { color:var(--yellow); }
+    h1,h2,h3,p { margin:0; }
+    h1,h2 { font-family:"Noto Serif KR",serif; }
+    h1 { font-size:clamp(48px,8vw,112px); line-height:1.02; letter-spacing:-.07em; max-width:1100px; }
+    h2 { font-size:clamp(34px,5vw,72px); line-height:1.08; letter-spacing:-.055em; max-width:950px; }
+    h3 { font-size:17px; line-height:1.45; }
+    .lead { max-width:650px; margin-top:26px; color:#5e615f; font-size:18px; line-height:1.7; }
+    .dark .lead { color:#c9c7bf; }
+    .page, .nav { position:absolute; z-index:4; font:500 12px "DM Mono",monospace; letter-spacing:.08em; }
+    .page { top:38px; right:48px; }.nav { bottom:37px; right:48px; color:#757773; }
+    .dark .nav { color:#b6b6ad; }
+    .stamp { margin-top:60px; border-top:2px solid currentColor; width:270px; padding-top:12px; font:12px/1.5 "DM Mono",monospace; }
+    .display-number { font:900 clamp(110px,22vw,300px)/.72 "Noto Serif KR",serif; letter-spacing:-.12em; color:var(--red); margin:28px 0 20px; }
+    .grid { display:grid; gap:18px; margin-top:42px; }.two { grid-template-columns:1fr 1fr; }.three { grid-template-columns:repeat(3,1fr); }
+    .card { padding:25px; border:1px solid var(--line); background:rgba(255,255,255,.28); min-height:150px; }.dark .card { border-color:#46505a; background:#262c33; }
+    .metric { font:900 clamp(38px,5vw,72px)/1 "Noto Serif KR",serif; letter-spacing:-.07em; }.caption { margin-top:9px; color:#666762; font-size:14px; line-height:1.55; }.dark .caption { color:#bfc0b9; }
+    .quote { font:700 clamp(29px,4vw,54px)/1.28 "Noto Serif KR",serif; letter-spacing:-.05em; max-width:980px; margin-top:28px; }
+    .quote em { color:var(--red); font-style:normal; }.dark .quote em { color:var(--yellow); }
+    .chart-box { margin-top:32px; max-width:1050px; }.bar-row { display:grid; grid-template-columns:170px 1fr 62px; gap:14px; align-items:center; margin:13px 0; font-size:14px; }.track { height:22px; background:#e1dcd3; overflow:hidden; }.bar { height:100%; width:0; background:var(--blue); transition:width 1s cubic-bezier(.22,1,.36,1); }.bar.red { background:var(--red); }.bar.yellow { background:var(--yellow); }.active .bar { width:var(--w); }
+    .small { font:12px "DM Mono",monospace; color:#6c706f; }.dark .small { color:#bbc1be; }
+    .matrix { display:grid; grid-template-columns:145px 1fr 1fr; max-width:700px; margin-top:34px; border-top:1px solid var(--line); border-left:1px solid var(--line); }.matrix > div { min-height:116px; padding:14px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }.matrix .hit { background:#b7d0e5; }.matrix .miss { background:#f2c8b7; }.matrix b { font:900 42px/1 "Noto Serif KR",serif; }.matrix span { font-size:12px; color:#555; }
+    .signal { display:grid; grid-template-columns:1.2fr .8fr; gap:54px; align-items:end; margin-top:32px; }.ring { width:min(34vw,370px); aspect-ratio:1; border-radius:50%; background:conic-gradient(var(--red) 0deg 293deg,#dfd9cf 293deg 360deg); display:grid; place-items:center; margin:auto; position:relative; }.ring::after { content:""; width:72%; height:72%; background:var(--paper); border-radius:50%; position:absolute; }.ring strong { z-index:1; font:900 clamp(46px,6vw,76px)/1 "Noto Serif KR",serif; }.ring small { z-index:1; margin-top:84px; position:absolute; font:12px "DM Mono",monospace; }
+    .steps { margin-top:35px; max-width:930px; }.step { display:grid; grid-template-columns:65px 1fr; gap:20px; padding:20px 0; border-top:1px solid var(--line); }.step:last-child { border-bottom:1px solid var(--line); }.step b { font:500 13px "DM Mono",monospace; color:var(--red); }.step p { font-size:18px; line-height:1.55; }.step p strong { font-weight:900; }
+    .scatter { height:280px; max-width:800px; margin:34px 0 0; border-left:1px solid var(--ink); border-bottom:1px solid var(--ink); position:relative; background:linear-gradient(#e7e0d6 1px,transparent 1px),linear-gradient(90deg,#e7e0d6 1px,transparent 1px); background-size:25% 25%; }.dot { width:13px; height:13px; border-radius:50%; position:absolute; background:var(--blue); opacity:0; transform:scale(.2); transition:opacity .35s,transform .6s cubic-bezier(.22,1,.36,1); }.dot.r { background:var(--red); }.active .dot { opacity:.88; transform:scale(1); }.axis-label { position:absolute; font:12px "DM Mono",monospace; color:#63645f; }.x-label { right:0; bottom:-28px; }.y-label { left:-30px; top:0; transform:rotate(-90deg); transform-origin:top left; }
+    .big-word { font:900 clamp(70px,14vw,210px)/.8 "Noto Serif KR",serif; letter-spacing:-.12em; color:#c5c0b6; position:absolute; right:5vw; bottom:7vh; }.dark .big-word { color:#353d46; }
+    .reveal { opacity:0; transform:translateY(20px); }.active .reveal { animation:rise .65s forwards; }.active .reveal.d1 { animation-delay:.12s; }.active .reveal.d2 { animation-delay:.24s; }.active .reveal.d3 { animation-delay:.38s; }
+    @keyframes rise { to { opacity:1; transform:none; } }
+    @media (max-width:700px) { .slide { padding:36px 32px 58px; }.grid.two,.grid.three,.signal { grid-template-columns:1fr; gap:10px; }.bar-row { grid-template-columns:105px 1fr 45px; }.card { min-height:110px; }.matrix { grid-template-columns:90px 1fr 1fr; }.matrix > div { min-height:85px; }.matrix b { font-size:32px; }.ring { width:220px; }.page { right:36px; }.nav { right:36px; } }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="slide dark active">
+      <span class="page">01 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">DATA STORY / PIMA DIABETES / 768 PATIENTS</div>
+      <h1 class="reveal d1">숫자 속<br>당뇨 위험의<br><em>문장</em></h1>
+      <p class="lead reveal d2">데이터 품질, 위험 신호, 예측 성능을 하나의 의사결정 서사로 정리한 기초 분석</p>
+      <div class="stamp reveal d3">PIMA INDIANS DIABETES DATASET<br>EDITORIAL PRESENTATION / 2026</div>
+      <div class="big-word">RISK</div>
+    </section>
+
+    <section class="slide">
+      <span class="page">02 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">THE POPULATION</div>
+      <h2 class="reveal d1">768명의 기록<br>268개의 당뇨 결과</h2>
+      <div class="grid three reveal d2"><div class="card"><div class="metric">768</div><div class="caption">전체 환자 기록</div></div><div class="card"><div class="metric">34.9%</div><div class="caption">당뇨 양성 비율</div></div><div class="card"><div class="metric">65.1%</div><div class="caption">당뇨 음성 비율</div></div></div>
+      <p class="quote reveal d3">질문은 단순한 분류가 아닌 <em>놓치지 말아야 할 위험의 우선순위</em></p>
+    </section>
+
+    <section class="slide">
+      <span class="page">03 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">DATA AUDIT / BEFORE THE MODEL</div>
+      <h2 class="reveal d1">빈칸은 없지만<br>결측 후보는 652개</h2>
+      <div class="display-number reveal d2">652</div>
+      <p class="lead reveal d2">의학적으로 0이 성립하기 어려운 측정값의 합계. 특히 인슐린과 피부 두께의 기록 공백 집중</p>
+      <div class="chart-box reveal d3">
+        <div class="bar-row"><span>Insulin</span><div class="track"><div class="bar red" style="--w:100%"></div></div><b>374</b></div>
+        <div class="bar-row"><span>SkinThickness</span><div class="track"><div class="bar" style="--w:61%"></div></div><b>227</b></div>
+        <div class="bar-row"><span>BloodPressure</span><div class="track"><div class="bar yellow" style="--w:9%"></div></div><b>35</b></div>
+        <div class="bar-row"><span>BMI</span><div class="track"><div class="bar yellow" style="--w:3%"></div></div><b>11</b></div>
+      </div>
+    </section>
+
+    <section class="slide dark">
+      <span class="page">04 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">DATA TREATMENT</div>
+      <h2 class="reveal d1">삭제보다<br>보존을 위한 전처리</h2>
+      <div class="steps reveal d2">
+        <div class="step"><b>01</b><p>의학적 0값을 <strong>결측 후보</strong>로 변환</p></div>
+        <div class="step"><b>02</b><p>학습 데이터의 중앙값으로 <strong>안정적 대체</strong></p></div>
+        <div class="step"><b>03</b><p>표준화와 대체를 파이프라인 내부에서 처리한 <strong>누수 방지</strong></p></div>
+      </div>
+      <p class="quote reveal d3">모델 성능 이전의 핵심은 <em>측정의 공백을 정직하게 다루는 태도</em></p>
+    </section>
+
+    <section class="slide">
+      <span class="page">05 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">MODEL SIGNAL / LOGISTIC REGRESSION</div>
+      <h2 class="reveal d1">랜덤 분류보다<br>명확한 분리력</h2>
+      <div class="signal reveal d2"><div class="ring"><strong>0.813</strong><small>ROC-AUC</small></div><div><div class="metric">70.8%</div><div class="caption">정확도 / 154개 테스트 기록</div><hr style="border:0;border-top:1px solid var(--line);margin:24px 0"><div class="metric">0.546</div><div class="caption">F1 점수 / 양성 탐지 균형</div></div></div>
+      <p class="small reveal d3">ROC-AUC 0.5는 무작위 기준선. 0.813은 유의미한 순위화 신호</p>
+    </section>
+
+    <section class="slide">
+      <span class="page">06 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">WHERE THE MODEL MISSES</div>
+      <h2 class="reveal d1">27명. 양성을 놓친<br>개선의 중심</h2>
+      <div class="matrix reveal d2"><div></div><div><span>예측 음성</span></div><div><span>예측 양성</span></div><div><span>실제 음성</span></div><div class="hit"><b>82</b><span>정확한 음성</span></div><div class="miss"><b>18</b><span>오탐</span></div><div><span>실제 양성</span></div><div class="miss"><b>27</b><span>놓친 양성</span></div><div class="hit"><b>27</b><span>정확한 양성</span></div></div>
+      <p class="lead reveal d3">재현율 50.0%. 의료 선별 목적이라면 임계값 조정과 재현율 중심의 다음 실험 필요</p>
+    </section>
+
+    <section class="slide">
+      <span class="page">07 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">FEATURE STORY</div>
+      <h2 class="reveal d1">혈당을 중심으로<br>겹쳐지는 위험 단서</h2>
+      <div class="scatter reveal d2"><span class="axis-label y-label">BMI</span><span class="axis-label x-label">GLUCOSE →</span>
+        <i class="dot" style="left:15%;bottom:20%;transition-delay:.05s"></i><i class="dot" style="left:24%;bottom:35%;transition-delay:.1s"></i><i class="dot" style="left:30%;bottom:25%;transition-delay:.15s"></i><i class="dot" style="left:39%;bottom:44%;transition-delay:.2s"></i><i class="dot" style="left:48%;bottom:39%;transition-delay:.25s"></i><i class="dot r" style="left:54%;bottom:49%;transition-delay:.3s"></i><i class="dot r" style="left:62%;bottom:62%;transition-delay:.35s"></i><i class="dot r" style="left:68%;bottom:58%;transition-delay:.4s"></i><i class="dot r" style="left:74%;bottom:77%;transition-delay:.45s"></i><i class="dot r" style="left:82%;bottom:71%;transition-delay:.5s"></i><i class="dot r" style="left:88%;bottom:88%;transition-delay:.55s"></i>
+      </div>
+      <p class="lead reveal d3">높은 혈당과 BMI 영역에서 양성 결과의 밀도 증가. 상관관계는 인과관계의 증거가 아닌 탐색의 출발점</p>
+    </section>
+
+    <section class="slide dark">
+      <span class="page">08 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">DECISION AGENDA</div>
+      <h2 class="reveal d1">다음 실험의<br>세 가지 방향</h2>
+      <div class="grid three reveal d2"><div class="card"><div class="metric">01</div><h3>재현율 우선 임계값</h3><div class="caption">놓친 양성 감소 중심</div></div><div class="card"><div class="metric">02</div><h3>측정 품질 개선</h3><div class="caption">인슐린·피부 두께 기록 보강</div></div><div class="card"><div class="metric">03</div><h3>교차검증 비교</h3><div class="caption">트리 기반 모델과의 성능 검증</div></div></div>
+      <p class="quote reveal d3">더 좋은 모델의 시작은 <em>더 신뢰할 수 있는 측정</em></p>
+    </section>
+
+    <section class="slide">
+      <span class="page">09 / 09</span><span class="nav">← → / SPACE</span>
+      <div class="kicker reveal">FINAL TAKEAWAY</div>
+      <h2 class="reveal d1">발견에서<br>실험으로</h2>
+      <div class="grid two reveal d2"><div class="card"><div class="metric">0.813</div><div class="caption">위험 순위화의 가능성</div></div><div class="card"><div class="metric">27</div><div class="caption">다음 개선을 위한 놓친 양성</div></div></div>
+      <p class="quote reveal d3">이 데이터는 예측의 완성이 아닌 <em>더 나은 질문의 출발점</em></p>
+      <div class="stamp reveal d3">SOURCE: PIMA INDIANS DIABETES DATASET<br>MODEL: LOGISTIC REGRESSION / TEST SPLIT 20%</div>
+    </section>
+  </main>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let current = 0;
+    function show(index) { current = (index + slides.length) % slides.length; slides.forEach((slide, i) => slide.classList.toggle('active', i === current)); }
+    addEventListener('keydown', event => { if (['ArrowRight',' ','PageDown'].includes(event.key)) show(current + 1); if (['ArrowLeft','PageUp'].includes(event.key)) show(current - 1); });
+    addEventListener('click', event => show(current + (event.clientX > innerWidth / 2 ? 1 : -1)));
+  </script>
+</body>
+</html>
